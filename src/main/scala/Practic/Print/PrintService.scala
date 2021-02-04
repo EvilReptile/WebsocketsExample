@@ -13,7 +13,7 @@ class PrintService()(implicit system: ActorSystem, mat: Materializer) {
 
     private val roomActor = system.actorOf(Props(classOf[PrintConnectionActor]))
 
-    def flow: Flow[Message, Message, Any] ={
+    def flow: Flow[Message, Message, Any] = {
         val name = Random.between(10000, 99999)
         val (actor, publisher) =
             Source.actorRef[String](16, OverflowStrategy.dropHead)
@@ -27,7 +27,7 @@ class PrintService()(implicit system: ActorSystem, mat: Materializer) {
                 case TextMessage.Strict(msg) =>
                     roomActor ! UserSaid(name.toString, msg)
             }
-            .to(Sink.onComplete( _ =>
+            .to(Sink.onComplete(_ =>
                 roomActor ! UserLeft(name.toString)
             ))
 

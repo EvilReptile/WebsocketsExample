@@ -12,7 +12,7 @@ class CoreService()(implicit system: ActorSystem, mat: Materializer) {
 
     private val roomActor = system.actorOf(Props(classOf[ConnectionActor]))
 
-    def flow(name: String): Flow[Message, Message, Any] ={
+    def flow(name: String): Flow[Message, Message, Any] = {
         val (actor, publisher) =
             Source.actorRef[String](16, OverflowStrategy.dropHead)
                 .map(msg => TextMessage.Strict(msg))
@@ -25,7 +25,7 @@ class CoreService()(implicit system: ActorSystem, mat: Materializer) {
                 case TextMessage.Strict(msg) =>
                     roomActor ! UserSaid(name, msg)
             }
-            .to(Sink.onComplete( _ =>
+            .to(Sink.onComplete(_ =>
                 roomActor ! UserLeft(name)
             ))
 

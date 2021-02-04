@@ -13,7 +13,7 @@ class PrintClient(name: String, connection: ConnectionActor) {
     val (upgradeResponse, closed) =
         Http().singleWebSocketRequest(WebSocketRequest("ws://localhost:8090/generatePf"), flow)
 
-    private def flow: Flow[Message, Message, Any] ={
+    private def flow: Flow[Message, Message, Any] = {
         val (actor, publisher) =
             Source.actorRef[String](16, OverflowStrategy.dropHead)
                 .map(msg => TextMessage.Strict(msg))
@@ -27,7 +27,7 @@ class PrintClient(name: String, connection: ConnectionActor) {
                     println(msg)
                     connection.broadcast(name, msg)
             }
-            .to(Sink.onComplete( _ =>
+            .to(Sink.onComplete(_ =>
                 roomActor ! Left
             ))
 
@@ -38,7 +38,7 @@ class PrintClient(name: String, connection: ConnectionActor) {
         roomActor ! Said(filename)
     }
 
-    def left ={
+    def left = {
         roomActor ! Left
     }
 }

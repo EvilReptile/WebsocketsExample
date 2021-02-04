@@ -10,50 +10,50 @@ import org.reactivestreams.Publisher
 import scala.collection.mutable
 
 class ChatRoom()(implicit system: ActorSystem, mat: Materializer) {
-  private val roomActor = system.actorOf(Props(classOf[ChatRoomActor]))
+    private val roomActor = system.actorOf(Props(classOf[ChatRoomActor]))
 
-  def flow(name: String): Flow[Message, Message, Any] = {
-    val (actorRef: ActorRef, publisher: Publisher[TextMessage.Strict]) =
-      Source.actorRef[String](16, OverflowStrategy.dropHead)
-        .map(msg => TextMessage.Strict(msg))
-        .toMat(Sink.asPublisher(false))(Keep.both).run()
+    def flow(name: String): Flow[Message, Message, Any] = {
+        val (actorRef: ActorRef, publisher: Publisher[TextMessage.Strict]) =
+            Source.actorRef[String](16, OverflowStrategy.dropHead)
+                .map(msg => TextMessage.Strict(msg))
+                .toMat(Sink.asPublisher(false))(Keep.both).run()
 
-    roomActor ! UserJoined(name, actorRef)
+        roomActor ! UserJoined(name, actorRef)
 
-    val sink: Sink[Message, Any] = Flow[Message]
-      .map {
-        case TextMessage.Strict(msg) =>
-          roomActor ! UserSaid(name, msg)
-      }
-      .to(Sink.onComplete( _ =>
-        roomActor ! UserLeft(name)
-      ))
+        val sink: Sink[Message, Any] = Flow[Message]
+            .map {
+                case TextMessage.Strict(msg) =>
+                    roomActor ! UserSaid(name, msg)
+            }
+            .to(Sink.onComplete(_ =>
+                roomActor ! UserLeft(name)
+            ))
 
-    Flow.fromSinkAndSource(sink, Source.fromPublisher(publisher))
-  }
+        Flow.fromSinkAndSource(sink, Source.fromPublisher(publisher))
+    }
 }
 
 class ChatRoomActor extends Actor {
-  val users: mutable.Map[String, ActorRef] = mutable.Map.empty[String, ActorRef]
+    val users: mutable.Map[String, ActorRef] = mutable.Map.empty[String, ActorRef]
 
-  override def receive: Receive = {
-    case UserJoined(name, actorRef) =>
-      users.put(name, actorRef)
-      println(s"$name joined the chatroom.")
-      broadcast(s"$name joined the chatroom.")
+    override def receive: Receive = {
+        case UserJoined(name, actorRef) =>
+            users.put(name, actorRef)
+            println(s"$name joined the chatroom.")
+            broadcast(s"$name joined the chatroom.")
 
-    case UserLeft(name) =>
-      users.remove(name)
-      println(s"$name left the chatroom.")
-      broadcast(s"$name left the chatroom.")
+        case UserLeft(name) =>
+            users.remove(name)
+            println(s"$name left the chatroom.")
+            broadcast(s"$name left the chatroom.")
 
-    case UserSaid(name, msg) =>
-      println(s"$name: $msg")
-      broadcast(s"$name: $msg")
-  }
+        case UserSaid(name, msg) =>
+            println(s"$name: $msg")
+            broadcast(s"$name: $msg")
+    }
 
-  def broadcast(msg: String): Unit = {
-    users.values.foreach(_ ! msg)
-  }
+    def broadcast(msg: String): Unit = {
+        users.values.foreach(_ ! msg)
+    }
 }
 
