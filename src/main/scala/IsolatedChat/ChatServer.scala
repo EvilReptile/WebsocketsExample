@@ -30,8 +30,8 @@ object ChatServer extends App {
         }
     })
 
-    Http().bindAndHandle(chatApi ~ interface, "localhost", 8080)
+    Http().bindAndHandle(chatApi ~ interface, "localhost", 8100)
         .map { _ =>
-            println(s"Server is running at http://localhost:8080/")
+            println(s"Server is running at http://localhost:8100/")
         }
 }

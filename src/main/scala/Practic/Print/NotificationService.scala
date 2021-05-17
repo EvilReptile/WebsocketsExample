@@ -1,6 +1,6 @@
 package Practic.Print
 
-import Chat.ChatMessages.{UserJoined, UserLeft, UserSaid}
+import Chat.ChatMessages.{UserDo, UserJoined, UserLeft, UserSaid}
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
@@ -34,6 +34,10 @@ class PrintService()(implicit system: ActorSystem, mat: Materializer) {
         Flow.fromSinkAndSource(sink, Source.fromPublisher(publisher))
     }
 
+    def makeEvent(user: String): Unit = {
+        roomActor ! UserDo(user)
+    }
+    
 }
 
 class PrintConnectionActor extends Actor {
@@ -42,7 +46,7 @@ class PrintConnectionActor extends Actor {
     override def receive: Receive = {
         case UserJoined(name, actorRef) =>
             connection.put(name, actorRef)
-            println(s"Joined the print server.")
+            println(s"Joined the print server. $name")
 
         case UserLeft(name) =>
             connection.remove(name)
@@ -51,9 +55,14 @@ class PrintConnectionActor extends Actor {
         case UserSaid(name, fileName) =>
             println(s"$fileName")
             broadcast(name, fileName)
+
+        case UserDo(user) =>
+            println("UserEvent")
+            broadcast(user, "test")
     }
 
     def broadcast(name: String, msg: String): Unit = {
+        println("event")
         Thread.sleep(1000)
         connection.get(name).foreach(_ ! s"$msg 25%")
         Thread.sleep(1000)

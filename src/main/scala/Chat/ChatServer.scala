@@ -16,12 +16,6 @@ object ChatServer extends App {
 
     private val chatroom = new ChatRoom()
 
-    val interface: Route =
-        pathEndOrSingleSlash {
-            getFromResource("web/index.html")
-        } ~
-            getFromResourceDirectory("web")
-
     val chatApi: Route =
         path("api" / "chat") {
             get {
@@ -31,7 +25,7 @@ object ChatServer extends App {
             }
         }
 
-    Http().bindAndHandle(chatApi ~ interface, "localhost", 8080)
+    Http().bindAndHandle(chatApi, "localhost", 8080)
         .map { _ =>
             println(s"Server is running at http://localhost:8080/")
         }

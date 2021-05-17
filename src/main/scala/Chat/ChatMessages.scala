@@ -17,5 +17,9 @@ object ChatMessages {
     case class UserSaid(name: String, message: String) extends UserEvent {
         override def equals(that: Any): Boolean = this.asInstanceOf[UserSaid].equals(that)
     }
+    
+    case class UserDo(user: String) extends UserEvent {
+        override def equals(that: Any): Boolean = this.asInstanceOf[UserDo].equals(that)
+    }
 
 }
